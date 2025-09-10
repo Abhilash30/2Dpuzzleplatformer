@@ -1,6 +1,5 @@
 import pygame, pytmx
 from player import Player   # <-- your Player class
-import lvl2
 pygame.init()
 
 # Fullscreen window
@@ -9,7 +8,7 @@ screen_width, screen_height = screen.get_size()
 clock = pygame.time.Clock()
 
 # --- Load map ---
-tmx_data = pytmx.util_pygame.load_pygame("lvl1.tmx")
+tmx_data = pytmx.util_pygame.load_pygame("lvl2.tmx")
 
 # Original map size
 map_width = tmx_data.width * tmx_data.tilewidth
@@ -93,7 +92,7 @@ while running:
 
     for obj in tmx_data.objects:
         if obj.name == "door":
-            current_level = lvl2()
+            print("Beans")
 
 
     pygame.display.flip()
