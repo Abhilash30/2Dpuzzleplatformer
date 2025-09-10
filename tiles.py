@@ -75,7 +75,8 @@ all_sprites = pygame.sprite.Group(player)
 
 # Platforms
 platforms = build_platforms(tmx_data, scale)
-
+font = pygame.font.SysFont("Arial", 48)
+death_counter = 0
 
 # --- Game Loop ---
 running = True
