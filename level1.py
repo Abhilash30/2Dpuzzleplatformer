@@ -1,4 +1,5 @@
 import pygame 
+from player import Player
 
 pygame.init()
 screen = pygame.display.set_mode((1280, 720))
@@ -8,6 +9,7 @@ running = True
 while running:
     # poll for events
     # pygame.QUIT event means the user clicked X to close your window
+    platforms = []
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -16,7 +18,9 @@ while running:
     screen.fill("purple")
 
     # RENDER YOUR GAME HERE
-    
+
+
+
     # flip() the display to put your work on screen
     pygame.display.flip()
 
