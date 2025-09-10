@@ -81,7 +81,7 @@ platforms = build_platforms(tmx_data, scale)
 running = True
 while running:
     for event in pygame.event.get():
-        if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+        if event.type == pygame.QUIT or (event.key == pygame.K_ESCAPE):
             running = False
 
     keys = pygame.key.get_pressed()
@@ -92,6 +92,7 @@ while running:
     all_sprites.draw(screen)
 
     for obj in tmx_data.objects:
+        
         if obj.name == "door":
             current_level = lvl2()
 
