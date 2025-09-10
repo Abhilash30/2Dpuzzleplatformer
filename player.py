@@ -35,4 +35,4 @@ class Player(pygame.sprite.Sprite):
                     self.on_ground = True
 
         if keys[pygame.K_SPACE] and self.on_ground:
-            self.vel_y = -19
+            self.vel_y = -21

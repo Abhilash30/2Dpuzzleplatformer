@@ -1,6 +1,7 @@
 import pygame, pytmx
 from player import Player   # <-- your Player class
-import lvl2
+import lvl2  # your lvl2.py file
+
 pygame.init()
 
 # Fullscreen window
@@ -20,7 +21,6 @@ scale_x = screen_width / map_width
 scale_y = screen_height / map_height
 scale = min(scale_x, scale_y)  # keep aspect ratio
 
-
 # --- Build platforms from tile layer ---
 def build_platforms(tmx_data, scale):
     platforms = []
@@ -38,10 +38,8 @@ def build_platforms(tmx_data, scale):
                         platforms.append(rect)
     return platforms
 
-
 # --- Draw map ---
 def draw_map(surface, tmx_data, scale):
-    platforms = []
     for layer in tmx_data.visible_layers:
         if isinstance(layer, pytmx.TiledTileLayer):
             for x, y, gid in layer:
@@ -56,13 +54,7 @@ def draw_map(surface, tmx_data, scale):
                     pos_y = int(y * tmx_data.tileheight * scale)
                     surface.blit(tile, (pos_x, pos_y))
 
-                    # Add platform rect for collision
-                    platforms.append(pygame.Rect(
-                        pos_x, pos_y,
-                        int(tmx_data.tilewidth * scale),
-                        int(tmx_data.tileheight * scale)
-                    ))
-    return platforms
+
 # --- Find spawn point in Tiled ---
 spawn_x, spawn_y = 100, 100  # default
 for obj in tmx_data.objects:
@@ -77,31 +69,40 @@ all_sprites = pygame.sprite.Group(player)
 platforms = build_platforms(tmx_data, scale)
 
 
+door_rect = None
+for obj in tmx_data.objects:
+    if obj.name and obj.name.lower() == "door":
+        door_rect = pygame.Rect(
+            int(obj.x * scale),
+            int(obj.y * scale),
+            int(obj.width * scale),
+            int(obj.height * scale)
+        )
+print("Final Door rect:", door_rect)
 # --- Game Loop ---
 running = True
 while running:
     for event in pygame.event.get():
-        if event.type == pygame.QUIT or (event.key == pygame.K_ESCAPE):
+        if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
             running = False
 
     keys = pygame.key.get_pressed()
-    all_sprites.update(keys, platforms)  # <-- make sure your Player.update accepts (keys, platforms)
+    all_sprites.update(keys, platforms)
 
-    if player.rect.top > screen_height:  # fell off the screen
-        death_counter += 1
-        player.rect.x, player.rect.y = spawn_x, spawn_y
     
-    death_text = font.render(f"Deaths: {death_counter}", True, (255, 0, 0))
-    screen.blit(death_text, (20, 20))
+    # --- Check door collision ---
+    if door_rect and player.rect.colliderect(door_rect):
+        print("AGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH")
+        print("COLLISION DETECTED -> Switching to Level 2")
+        running = False   # stop lvl1 loop
+        pygame.quit()     # quit this pygame instance
+        import lvl2
+        lvl2.main()
 
+    # --- Drawing ---
     screen.fill((0, 0, 0))
     draw_map(screen, tmx_data, scale)
     all_sprites.draw(screen)
-
-    for obj in tmx_data.objects:
-        if obj.name == "door":
-            current_level = lvl2()
-
 
     pygame.display.flip()
     clock.tick(60)
