@@ -1,10 +1,15 @@
 import pygame, pytmx
 from player import Player
 import lvl2  # your lvl2.py file
+from stone import Stone
 
 def run_level1():
     pygame.init()
-
+    pygame.mixer.init()
+    pygame.mixer.music.load("bg.mp3")
+    pygame.mixer.music.play(-1)
+    background = pygame.image.load("bg1.png")
+    background = pygame.transform.scale(background, (1280, 720))
     # Fullscreen window
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     screen_width, screen_height = screen.get_size()
@@ -12,7 +17,8 @@ def run_level1():
 
     # Load map
     tmx_data = pytmx.util_pygame.load_pygame("lvl1.tmx")
-   
+    
+
 
     
     # Original map size
@@ -63,6 +69,16 @@ def run_level1():
     player = Player(spawn_x, spawn_y)
     all_sprites = pygame.sprite.Group(player)
 
+    #stone spawn
+    stones = pygame.sprite.Group()
+# Instantiate stones from stone.py
+    stone_positions = [(200, 200), (400, 300), (600, 150)]
+    for pos in stone_positions:
+        stones.add(Stone(pos[0], pos[1]))
+
+
+
+
     door_rects = []
 
     for layer in tmx_data.visible_layers:
@@ -94,6 +110,8 @@ def run_level1():
         keys = pygame.key.get_pressed()
         all_sprites.update(keys, platforms)
         
+        screen.blit(background, (0, 0))
+
         for rect in door_rects:
             if player.rect.colliderect(rect):
                 print("Collision detected! Switching to Level 2")

@@ -3,6 +3,10 @@ from player import Player
 
 def main():
     pygame.init()
+    pygame.init()
+    pygame.mixer.init()
+    pygame.mixer.music.load("bg.mp3")
+    pygame.mixer.music.play(-1)
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     screen_width, screen_height = screen.get_size()
     clock = pygame.time.Clock()
