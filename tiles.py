@@ -87,12 +87,18 @@ while running:
     keys = pygame.key.get_pressed()
     all_sprites.update(keys, platforms)  # <-- make sure your Player.update accepts (keys, platforms)
 
+    if player.rect.top > screen_height:  # fell off the screen
+        death_counter += 1
+        player.rect.x, player.rect.y = spawn_x, spawn_y
+    
+    death_text = font.render(f"Deaths: {death_counter}", True, (255, 0, 0))
+    screen.blit(death_text, (20, 20))
+
     screen.fill((0, 0, 0))
     draw_map(screen, tmx_data, scale)
     all_sprites.draw(screen)
 
     for obj in tmx_data.objects:
-        
         if obj.name == "door":
             current_level = lvl2()
 
