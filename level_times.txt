@@ -79,3 +79,6 @@ lvl2.tmx: Time: 16.23, Deaths: 12
 lvl2.tmx: Time: 71.80, Deaths: 7
 lvl1.tmx: Time: 49.46, Deaths: 2
 lvl2.tmx: Time: 4.59, Deaths: 0
+lvl1.tmx: Time: 6.49, Deaths: 2
+lvl2.tmx: Time: 6.88, Deaths: 1
+lvl2.tmx: Time: 4.86, Deaths: 0

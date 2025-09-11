@@ -5,6 +5,7 @@ import lvl2  # Level-2 module
 import os
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
+from movingplatform import MovingPlatform
 
 # ---------------------- ML Setup ----------------------
 # Dummy training data: [death_lvl1, time_lvl1, death_lvl2, time_lvl2]
@@ -86,6 +87,11 @@ def run_level(level_file, background_file):
     stone_positions = [(200, 200), (400, 300), (600, 150)]
     for pos in stone_positions:
         stones.add(Stone(pos[0], pos[1]))
+
+    moving_platforms = pygame.sprite.Group()
+    if "lvl2.tmx" in level_file:   # only show in level 2
+        platform = MovingPlatform(300, 400, 100, 20, dx=2, dy=0, move_range=200)
+        moving_platforms.add(platform)
 
     def draw_map(surface):
         for layer in tmx_data.visible_layers:
