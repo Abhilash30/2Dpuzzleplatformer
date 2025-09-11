@@ -7,21 +7,23 @@ class MovingPlatform(pygame.sprite.Sprite):
         self.image.fill((150, 75, 0))  # brown platform
         self.rect = self.image.get_rect(topleft=(x, y))
 
-        # Movement config
+        # Movement settings
         self.start_x, self.start_y = x, y
-        self.range_x, self.range_y = range_x, range_y
+        self.range_x = range_x
+        self.range_y = range_y
         self.speed = speed
-        self.direction_x, self.direction_y = 1, 1
+        self.direction_x = 1 if range_x > 0 else 0
+        self.direction_y = 1 if range_y > 0 else 0
 
     def update(self):
-        # Horizontal move
-        if self.range_x > 0:
+        # Horizontal movement
+        if self.direction_x != 0:
             self.rect.x += self.speed * self.direction_x
             if abs(self.rect.x - self.start_x) >= self.range_x:
-                self.direction_x *= -1
+                self.direction_x *= -1  # reverse direction
 
-        # Vertical move
-        if self.range_y > 0:
+        # Vertical movement
+        if self.direction_y != 0:
             self.rect.y += self.speed * self.direction_y
             if abs(self.rect.y - self.start_y) >= self.range_y:
                 self.direction_y *= -1

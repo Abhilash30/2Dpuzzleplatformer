@@ -1,5 +1,31 @@
 import pygame
+import random
 
+# --- New TrailParticle Class ---
+class TrailParticle:
+    def __init__(self, x, y, color):
+        self.x = x
+        self.y = y + 14
+        self.color = color
+        self.radius = 5
+        self.alpha = 255
+        self.alpha_decay = 5
+        self.vel_y = random.uniform(-1, -0.5)
+        self.vel_x = random.uniform(-0.5, 0.5)
+
+    def update(self):
+        self.x += self.vel_x
+        self.y += self.vel_y
+        self.vel_y += 0.1
+
+        self.alpha -= self.alpha_decay
+        self.radius -= 0.1
+
+    def draw(self, screen):
+        if self.alpha > 0 and self.radius > 0:
+            s = pygame.Surface((int(self.radius * 2), int(self.radius * 2)), pygame.SRCALPHA)
+            pygame.draw.circle(s, (self.color[0], self.color[1], self.color[2], int(self.alpha)), (int(self.radius), int(self.radius)), int(self.radius))
+            screen.blit(s, (self.x - self.radius, self.y - self.radius))
 
 
 def get_frames(sheet, frame_width, frame_height, scale=5):
@@ -45,12 +71,14 @@ class Player(pygame.sprite.Sprite):
         self.vel_y = 0
         self.on_ground = False
         self.facing_right = True
-
+        # --- New: Trail particle list ---
+        self.trail_particles = []
     def set_state(self, new_state):
         if self.state != new_state:
             self.state = new_state
             self.current_frame = 0
             self.animation_timer = 0
+        
 
     def update(self, keys, platforms):
         moving = False
@@ -65,6 +93,7 @@ class Player(pygame.sprite.Sprite):
 
         if moving:
             self.set_state("run")
+            self.trail_particles.append(TrailParticle(self.rect.centerx, self.rect.centery, (255, 255, 255)))
         else:
             self.set_state("idle")
 

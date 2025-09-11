@@ -6,38 +6,88 @@ import numpy as np
 from sklearn.tree import DecisionTreeClassifier
 import pickle
 from movingplatform import MovingPlatform
-from PIL import Image
-import pygame
+import random
 
 
 # ---------------------- ML Setup ----------------------
-X_train = np.array([
-    [0, 50, 0, 45],   # very skilled -> Hard
-    [1, 60, 1, 55],   # skilled -> Hard
-    [2, 70, 2, 65],   # average -> Medium
-    [3, 80, 3, 75],   # below average -> Medium
-    [4, 90, 4, 85],   # beginner -> Easy
-    [5, 100, 5, 95],  # poor performance -> Easy
-    [6, 120, 6, 110]  # very poor -> Easy
-])
+MODEL_FILE = "skill_model.pkl"
+LOG_FILE = "level_times.txt"
 
-y_train = np.array(["Hard", "Hard", "Medium", "Medium", "Easy", "Easy", "Easy"])
+def base_training():
+    """Bootstrap model with some initial training data."""
+    X_train = [
+        [0, 40, 0, 35],   # very skilled
+        [2, 70, 2, 65],   # average
+        [6, 120, 6, 115]  # poor
+    ]
+    y_train = ["Hard", "Medium", "Easy"]
 
-model = DecisionTreeClassifier(max_depth=5, random_state=42)
-model.fit(X_train, y_train)
+    clf = DecisionTreeClassifier(max_depth=5, random_state=42)
+    clf.fit(X_train, y_train)
 
-with open("skill_model.pkl", "wb") as f:
-    pickle.dump(model, f)
+    with open(MODEL_FILE, "wb") as f:
+        pickle.dump(clf, f)
+
+    return clf
+
+def load_or_train_model():
+    """Load trained model if available, else create base model."""
+    if os.path.exists(MODEL_FILE):
+        with open(MODEL_FILE, "rb") as f:
+            return pickle.load(f)
+    else:
+        return base_training()
+
+def log_player_data(level, deaths, time_taken):
+    """Append player performance stats to log file."""
+    with open(LOG_FILE, "a") as f:
+        f.write(f"{level},{deaths},{int(time_taken)}\n")
+
+def retrain_model():
+    """Retrain model using accumulated logs from level_times.txt."""
+    if not os.path.exists(LOG_FILE):
+        return None
+
+    X, y = [], []
+    with open(LOG_FILE, "r") as f:
+        for line in f:
+            parts = line.strip().split(",")
+            if len(parts) != 3:
+                continue
+            level, deaths, time_taken = parts
+            try:
+                deaths, time_taken = int(deaths), int(time_taken)
+            except ValueError:
+                continue
+
+            # Add example
+            X.append([deaths, time_taken, deaths, time_taken])
+            # Label rule
+            if deaths <= 1 and time_taken < 60:
+                y.append("Hard")
+            elif deaths <= 3 and time_taken < 100:
+                y.append("Medium")
+            else:
+                y.append("Easy")
+
+    if X:
+        clf = DecisionTreeClassifier(max_depth=5, random_state=42)
+        clf.fit(X, y)
+        with open(MODEL_FILE, "wb") as f:
+            pickle.dump(clf, f)
+        return clf
+    return None
 
 
 
 # ---------------------- Level Loader ----------------------
-def run_level(level_file, background_file):
+def run_level(level_file, background_file, level_num, clf):
     pygame.init()
     pygame.mixer.init()
     pygame.mixer.music.load("bg.mp3")
     pygame.mixer.music.play(-1)
-
+    scroll_x = 0
+    scroll_speed = 1.5
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     screen_width, screen_height = screen.get_size()
     clock = pygame.time.Clock()
@@ -49,6 +99,10 @@ def run_level(level_file, background_file):
 
     background = pygame.image.load(background_file).convert()
     background = pygame.transform.scale(background, (screen_width, screen_height))
+    bg_width = background.get_width()
+
+    font = pygame.font.Font("MedodicaRegular.otf", 120)
+    level_name_text = font.render(f"Level {level_num}", True, (0, 255, 255))
 
     # Platforms
     platforms = []
@@ -114,10 +168,10 @@ def run_level(level_file, background_file):
 
     # ------------------ Game Loop ------------------
     death_count = 0
-    font = pygame.font.Font(None, 50)
+    font = pygame.font.Font("MedodicaRegular.otf", 50)
     running = True
     start_ticks = pygame.time.get_ticks()
-
+    
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
@@ -128,6 +182,8 @@ def run_level(level_file, background_file):
         keys = pygame.key.get_pressed()
         all_sprites.update(keys, platforms)
         moving_platforms.update()
+
+    
 
         elapsed_time = (pygame.time.get_ticks() - start_ticks) / 1000
 
@@ -151,6 +207,12 @@ def run_level(level_file, background_file):
             if player.rect.colliderect(rect):
                 running = False
                 break
+        
+        scroll_x -= scroll_speed
+        if scroll_x <= -bg_width:
+            scroll_x = 0
+        screen.blit(background, (scroll_x, 0))
+        screen.blit(background, (scroll_x + bg_width, 0))
 
         # Draw
         screen.fill((0, 0, 0))
@@ -158,75 +220,78 @@ def run_level(level_file, background_file):
         draw_map(screen)
         moving_platforms.draw(screen)
         all_sprites.draw(screen)
+        screen.blit(level_name_text, (screen_width // 2 - level_name_text.get_width() // 2, 20))
+
 
         death_text = font.render(f"Deaths: {death_count}", True, (255, 0, 0))
         timer_text = font.render(f"Time: {int(elapsed_time)}s", True, (255, 255, 0))
         screen.blit(death_text, (20, 20))
         screen.blit(timer_text, (20, 60))
+        
+
+         # --- Update and draw trail particles ---
+        for particle in player.trail_particles[:]:
+            particle.update()
+            particle.draw(screen)
+            if particle.alpha <= 0 or particle.radius <= 0:
+                player.trail_particles.remove(particle)
+
         pygame.display.flip()
         clock.tick(60)
 
-    # Save stats
-    with open("level_times.txt", "a") as f:
-        f.write(f"{level_file}: Time: {elapsed_time:.2f}, Deaths: {death_count}\n")
-        f.flush()
-        os.fsync(f.fileno())
+     # Save stats & retrain model
+    log_player_data(level_num, death_count, elapsed_time)
+    new_clf = retrain_model()
+    if new_clf:
+        clf = new_clf
 
-    return death_count, elapsed_time
-
+    return death_count, elapsed_time, clf
 
 # ---------------------- Skill Assessment ----------------------
 def assess_player():
+    clf = load_or_train_model()
+
     print("Starting Level-1 Trial")
-    death1, time1 = run_level("lvl1.tmx", "bg1.jpg")
+    death1, time1, clf = run_level("lvl1.tmx", "bg1.jpg", 1, clf)
     print("Starting Level-2 Trial")
-    death2, time2 = run_level("lvl2.tmx", "bg1.jpg")
+    death2, time2, clf = run_level("lvl2.tmx", "bg1.jpg", 2, clf)
 
-    with open("skill_model.pkl", "rb") as f:
-        model = pickle.load(f)
-
+    # ML prediction using trial data
     player_stats = np.array([[death1, time1, death2, time2]])
-    category = model.predict(player_stats)[0]
+    predicted_category = clf.predict(player_stats)[0]
 
-    print(f"Initial category (decision tree) -> {category}")
-
-    categories = {
-        "Easy": [1, 2, 3, 4],
-        "Medium": [5, 6],
-        "Hard": [7, 8, 9, 10, 11, 12]
+    # Map category → level
+    category_to_level = {
+        "Easy": 1,
+        "Medium": 4,
+        "Hard": 7
     }
+    next_level = category_to_level.get(predicted_category, 3)
 
-    levels = categories[category]
-    current_level_index = 0
-    predicted_level = levels[current_level_index]
+    print(f"ML Decision: Player should play category {predicted_category}, starting at Level {next_level}")
 
-    level_files = {i: (f"L{i}.tmx", "bg1.jpg") for i in range(1, 13)}
+    # Level files
+    level_files = {i: (f"L{i}.tmx", f"bg1.jpg") for i in range(1, 13)}
+    current_level = next_level
 
-    while predicted_level <= 12:
-        print(f"Now playing Level {predicted_level} ({category})")
-        death, time = run_level(*level_files[predicted_level])
+    # Loop until end
+    while current_level <= 12:
+        _, _, clf = run_level(level_files[current_level][0], level_files[current_level][1], current_level, clf)
+        current_level += 1
+        # Re-check ML prediction after each level
+        new_clf = retrain_model()
+        if new_clf:
+            clf = new_clf
+        pred = clf.predict([[0,0,0,0]])[0]  # placeholder, normally use last stats
 
-        if category == "Hard":
-            current_level_index += 1
-        else:
-            if death <= 1 and time < 20:
-                if current_level_index + 1 < len(levels):
-                    current_level_index += 1
-                else:
-                    if category == "Easy":
-                        category = "Medium"
-                        levels = categories["Medium"]
-                    elif category == "Medium":
-                        category = "Hard"
-                        levels = categories["Hard"]
-                    current_level_index = 0
-            else:
-                current_level_index = 0
+        #if pred == "Hard":
+            #current_level = min(12, current_level + 1)
+        #elif pred == "Medium":
+            #current_level = min(12, current_level + 2)
+        #else:  # Easy
+            #current_level = min(12, current_level + 2)
 
-        if current_level_index >= len(levels):
-            break
 
-        predicted_level = levels[current_level_index]
 #---- win screen
 def victory_screen():
     pygame.init()
@@ -251,7 +316,7 @@ def victory_screen():
 
         screen.blit(title, (screen.get_width()//2 - title.get_width()//2, screen.get_height()//3))
         screen.blit(msg, (screen.get_width()//2 - msg.get_width()//2, screen.get_height()//2))
-        
+       
 
         pygame.display.flip()
         clock.tick(60)
