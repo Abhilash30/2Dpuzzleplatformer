@@ -27,7 +27,7 @@ except pygame.error:
 # Menu items and their positions as transparent rectangles
 # The height of each rectangle is 20, and their positions have been adjusted.
 menu_items = [
-    {"action": "enter_game", "rect": pygame.Rect(750, 265, 400, 20)},    # ENTER GAME
+    {"action": "enter_game", "rect": pygame.Rect(750, 265, 400, 27)},    # ENTER GAME
     {"action": "settings", "rect": pygame.Rect(750, 340, 400, 20)},      # SETTINGS
     {"action": "credits", "rect": pygame.Rect(750, 389, 400, 20)},       # CREDITS (moved up by 13px)
     {"action": "quit", "rect": pygame.Rect(750, 449, 400, 20)},          # QUIT (moved up by 28px from original)
