@@ -1,0 +1,56 @@
+Level1: 10.44 seconds
+Level1: 1 deaths
+Level2: 17.89 seconds
+Level2: 3 deaths
+Level2: 8.39 seconds
+Level2: 0 deaths
+Level2: 6.58 seconds
+Level2: 0 deaths
+Level1: 9.19 seconds
+Level1: 2 deaths
+Level2: 4.98 seconds
+Level2: 0 deaths
+Level3: 10.67 seconds
+Level3: 2 deaths
+Level1: 6.94 seconds
+Level1: 1 deaths
+Level1: 18.94 seconds
+Level1: 0 deaths
+Level2: 7.69 seconds
+Level2: 1 deaths
+Level3: 7.55 seconds
+Level3: 1 deaths
+lvl1.tmx: Time: 8.32, Deaths: 0
+lvl2.tmx: Time: 5.33, Deaths: 0
+lvl2.tmx: Time: 6.93, Deaths: 2
+lvl1.tmx: Time: 7.13, Deaths: 1
+lvl2.tmx: Time: 5.09, Deaths: 0
+lvl2.tmx: Time: 5.13, Deaths: 0
+lvl1.tmx: Time: 31.49, Deaths: 9
+lvl1.tmx: Time: 31.49, Deaths: 9
+lvl2.tmx: Time: 18.10, Deaths: 11
+lvl2.tmx: Time: 14.78, Deaths: 5
+lvl1.tmx: Time: 26.54, Deaths: 19
+lvl2.tmx: Time: 24.80, Deaths: 26
+lvl2.tmx: Time: 18.76, Deaths: 3
+lvl2.tmx: Time: 18.76, Deaths: 3
+lvl1.tmx: Time: 4.50, Deaths: 0
+lvl2.tmx: Time: 4.78, Deaths: 0
+lvl3.tmx: Time: 4.42, Deaths: 0
+lvl2.tmx: Time: 6.32, Deaths: 1
+lvl1.tmx: Time: 4.27, Deaths: 1
+lvl2.tmx: Time: 36.56, Deaths: 43
+lvl3.tmx: Time: 4.74, Deaths: 0
+lvl1.tmx: Time: 6.18, Deaths: 1
+lvl1.tmx: Time: 34.72, Deaths: 0
+lvl1.tmx: Time: 5.04, Deaths: 0
+lvl1.tmx: Time: 7.09, Deaths: 1
+lvl1.tmx: Time: 5.76, Deaths: 0
+lvl2.tmx: Time: 14.60, Deaths: 0
+lvl2.tmx: Time: 4.51, Deaths: 0
+lvl1.tmx: Time: 5.30, Deaths: 0
+lvl2.tmx: Time: 4.44, Deaths: 0
+lvl2.tmx: Time: 4.58, Deaths: 0
+lvl1.tmx: Time: 7.22, Deaths: 0
+lvl2.tmx: Time: 5.01, Deaths: 0
+lvl2.tmx: Time: 6.25, Deaths: 1

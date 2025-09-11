@@ -1,6 +1,5 @@
 import pygame, pytmx
 from player import Player
-import lvl3
 import os
 def main(level1_time=None):   # optional: accept time from lvl1
     pygame.init()
@@ -14,7 +13,7 @@ def main(level1_time=None):   # optional: accept time from lvl1
     clock = pygame.time.Clock()
 
     # Load map
-    tmx_data = pytmx.util_pygame.load_pygame("lvl2.tmx")
+    tmx_data = pytmx.util_pygame.load_pygame("lvl3.tmx")
 
     # Calculate scale to fit fullscreen
     map_width = tmx_data.width * tmx_data.tilewidth
@@ -83,9 +82,8 @@ def main(level1_time=None):   # optional: accept time from lvl1
 
     # --- Game loop ---
     running = True
-    switch_to_lvl3 = False
     while running:
-        font = pygame.font.Font("MedodicaRegular.otf", 50)
+        font = pygame.font.Font(None, 50)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
@@ -109,16 +107,15 @@ def main(level1_time=None):   # optional: accept time from lvl1
         for rect in door_rects:
             if player.rect.colliderect(rect):
                 print(f"PLAYER finished Level 2 in {elapsed_time:.2f} seconds")
-                switch_to_lvl3 = True
+
                 # Save time to file
                 with open("level_times.txt", "a") as f:
-                    f.write(f"Level2: {elapsed_time:.2f} seconds\n")
-                    f.write(f"Level2: {death_count} deaths\n")
+                    f.write(f"Level3: {elapsed_time:.2f} seconds\n")
+                    f.write(f"Level3: {death_count} deaths\n")
                     f.flush()
                     os.fsync(f.fileno())
 
                 running = False
-                
                 break
 
         # --- Drawing ---
@@ -133,9 +130,9 @@ def main(level1_time=None):   # optional: accept time from lvl1
         timer_text = font.render(f"Time: {elapsed_time:.2f}s", True, (255, 255, 0))
         screen.blit(timer_text, (20, 60))
 
-    
-        if switch_to_lvl3:
-            lvl3.main()
+        # Debug: draw door rects in red
+        for rect in door_rects:
+            pygame.draw.rect(screen, (255, 0, 0), rect, 3)
 
         pygame.display.flip()
         clock.tick(60)
