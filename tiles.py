@@ -198,9 +198,9 @@ def assess_player():
     current_level_index = 0
     predicted_level = levels[current_level_index]
 
-    level_files = {i: (f"L{i}.tmx", "bg1.jpg") for i in range(1, 10)}
+    level_files = {i: (f"L{i}.tmx", "bg1.jpg") for i in range(1, 13)}
 
-    while predicted_level <= 9:
+    while predicted_level <= 12:
         print(f"Now playing Level {predicted_level} ({category})")
         death, time = run_level(*level_files[predicted_level])
 
