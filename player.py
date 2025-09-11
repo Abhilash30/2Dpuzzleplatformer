@@ -1,7 +1,9 @@
 import pygame
 
 #idle = pygame.image.load("Idle.png.png").convert_alpha()
+pygame.init()
 pygame.mixer.init()
+jump_sound = pygame.mixer.Sound("jump.mp3")
 
 
 def get_frames(sheet, frame_width, frame_height):
@@ -12,7 +14,6 @@ def get_frames(sheet, frame_width, frame_height):
             for x in range(0, sheet_width, frame_width):
                 frame = sheet.subsurface(pygame.Rect(x, y, frame_width, frame_height))
                 frames.append(frame)
-    
         return frames
 
 #player_frames = get_frames(idle, 8, 8)
@@ -56,6 +57,9 @@ class Player(pygame.sprite.Sprite):
                     self.vel_y = 0
                     self.on_ground = True
 
-        if keys[pygame.K_SPACE] and self.on_ground:
-            self.vel_y = -21
+        
+            if (keys[pygame.K_SPACE] or keys[pygame.K_w] or keys[pygame.K_UP]) and self.on_ground:
+                self.vel_y = -21
+                self.on_ground = False
+                jump_sound.play()
             

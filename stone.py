@@ -1,4 +1,3 @@
-# stone.py
 import pygame
 
 class Stone(pygame.sprite.Sprite):
