@@ -2,7 +2,7 @@ import pygame
 from tiles import run_level, assess_player
 import sys
 import credits
-
+import Settings
 # Initialize Pygame
 pygame.init()
 
@@ -98,7 +98,7 @@ if __name__ == "__main__":
         assess_player()
 
     elif action == "settings":
-        
+        Settings.show_settings()
         pass
     elif action == "credits":
         credits.show_credits()
