@@ -2,13 +2,15 @@ import pygame, pytmx
 from player import Player
 import lvl2  # your lvl2.py file
 from stone import Stone
-
+import os
 def run_level1():
     pygame.init()
     pygame.mixer.init()
     pygame.mixer.music.load("bg.mp3")
     pygame.mixer.music.play(-1)
-
+    #---clear times file at restart----
+    with open("level_times.txt", "w") as f:
+        f.write("")
     # Fullscreen window
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
     screen_width, screen_height = screen.get_size()
@@ -99,10 +101,13 @@ def run_level1():
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 running = False
+        
+
 
         keys = pygame.key.get_pressed()
         all_sprites.update(keys, platforms)
 
+        elapsed_time = (pygame.time.get_ticks() - start_ticks) / 1000
         # --- Death check (falls below map or touches stone) ---
         if player.rect.top > screen_height:  # fell out of screen
             death_count += 1
@@ -117,6 +122,18 @@ def run_level1():
             if player.rect.colliderect(rect):
                 print("Collision detected! Switching to Level 2")
                 switch_to_lvl2 = True
+                running = False
+        for rect in door_rects:
+            if player.rect.colliderect(rect):
+                print(f"PLAYER finished Level 2 in {elapsed_time:.2f} seconds")
+
+                # Save time to file
+                with open("level_times.txt", "a") as f:
+                    f.write(f"Level1: {elapsed_time:.2f} seconds\n")
+                    f.write(f"Level1: {death_count} deaths\n")
+                    f.flush()
+                    os.fsync(f.fileno())
+
                 running = False
                 break
 
@@ -133,8 +150,6 @@ def run_level1():
         timer_text = font.render(f"Time: {seconds}s", True, (255, 255, 0))
         screen.blit(timer_text, (20, 60))
 
-        pygame.display.flip()
-        clock.tick(60)
         seconds = (pygame.time.get_ticks() - start_ticks) // 1000
         timer_text = font.render(f"Time: {seconds}s", True, (255, 255, 0))
         screen.blit(timer_text, (20, 60))
