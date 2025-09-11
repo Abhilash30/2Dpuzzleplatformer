@@ -1,26 +1,27 @@
 import pygame
 
 class MovingPlatform(pygame.sprite.Sprite):
-    def __init__(self, x, y, width, height, dx=2, dy=0, move_range=100):
+    def __init__(self, x, y, w, h, range_x=0, range_y=0, speed=2):
         super().__init__()
-        self.image = pygame.Surface((width, height))
-        self.image.fill((250, 250, 250))  # WHITE
+        self.image = pygame.Surface((w, h))
+        self.image.fill((150, 75, 0))  # brown platform
         self.rect = self.image.get_rect(topleft=(x, y))
 
-        # Movement setup
-        self.start_pos = pygame.Vector2(x, y)
-        self.dx = dx   # Horizontal speed
-        self.dy = dy   # Vertical speed
-        self.move_range = move_range
-        self.direction = 1
+        # Movement config
+        self.start_x, self.start_y = x, y
+        self.range_x, self.range_y = range_x, range_y
+        self.speed = speed
+        self.direction_x, self.direction_y = 1, 1
 
     def update(self):
-        # Move
-        self.rect.x += self.dx * self.direction
-        self.rect.y += self.dy * self.direction
+        # Horizontal move
+        if self.range_x > 0:
+            self.rect.x += self.speed * self.direction_x
+            if abs(self.rect.x - self.start_x) >= self.range_x:
+                self.direction_x *= -1
 
-        # Reverse direction when past range
-        if abs(self.rect.x - self.start_pos.x) > self.move_range:
-            self.direction *= -1
-        if abs(self.rect.y - self.start_pos.y) > self.move_range:
-            self.direction *= -1
+        # Vertical move
+        if self.range_y > 0:
+            self.rect.y += self.speed * self.direction_y
+            if abs(self.rect.y - self.start_y) >= self.range_y:
+                self.direction_y *= -1

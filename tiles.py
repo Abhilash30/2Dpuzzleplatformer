@@ -1,30 +1,35 @@
 import pygame, pytmx
 from player import Player
 from stone import Stone
-import lvl2  # Level-2 module
 import os
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
+import pickle
 from movingplatform import MovingPlatform
 
-# ---------------------- ML Setup ----------------------
-# Dummy training data: [death_lvl1, time_lvl1, death_lvl2, time_lvl2]
-X_train = np.array([
-    [3, 120, 1, 90],
-    [1, 80, 2, 110],
-    [0, 60, 0, 70]
-])
-y_train = np.array([2, 1, 2])  # 1 or 2 → level to assign
 
-model = DecisionTreeClassifier()
+# ---------------------- ML Setup ----------------------
+X_train = np.array([
+    [0, 50, 0, 45],   # very skilled -> Hard
+    [1, 60, 1, 55],   # skilled -> Hard
+    [2, 70, 2, 65],   # average -> Medium
+    [3, 80, 3, 75],   # below average -> Medium
+    [4, 90, 4, 85],   # beginner -> Easy
+    [5, 100, 5, 95],  # poor performance -> Easy
+    [6, 120, 6, 110]  # very poor -> Easy
+])
+
+y_train = np.array(["Hard", "Hard", "Medium", "Medium", "Easy", "Easy", "Easy"])
+
+model = DecisionTreeClassifier(max_depth=5, random_state=42)
 model.fit(X_train, y_train)
+
+with open("skill_model.pkl", "wb") as f:
+    pickle.dump(model, f)
+
 
 # ---------------------- Level Loader ----------------------
 def run_level(level_file, background_file):
-    """
-    Generic Level Runner: handles platforms, stones, player movement,
-    deaths, timer, doors. Returns death_count and elapsed_time.
-    """
     pygame.init()
     pygame.mixer.init()
     pygame.mixer.music.load("bg.mp3")
@@ -35,7 +40,6 @@ def run_level(level_file, background_file):
     clock = pygame.time.Clock()
 
     tmx_data = pytmx.util_pygame.load_pygame(level_file)
-
     map_width = tmx_data.width * tmx_data.tilewidth
     map_height = tmx_data.height * tmx_data.tileheight
     scale = min(screen_width / map_width, screen_height / map_height)
@@ -50,12 +54,10 @@ def run_level(level_file, background_file):
         if isinstance(layer, TiledTileLayer) and getattr(layer, "name", "").lower() == "ground":
             for x, y, gid in layer:
                 if gid != 0:
-                    rect = pygame.Rect(
-                        int(x * tmx_data.tilewidth * scale),
-                        int(y * tmx_data.tileheight * scale),
-                        int(tmx_data.tilewidth * scale),
-                        int(tmx_data.tileheight * scale)
-                    )
+                    rect = pygame.Rect(int(x * tmx_data.tilewidth * scale),
+                                       int(y * tmx_data.tileheight * scale),
+                                       int(tmx_data.tilewidth * scale),
+                                       int(tmx_data.tileheight * scale))
                     platforms.append(rect)
 
     # Doors
@@ -65,12 +67,10 @@ def run_level(level_file, background_file):
         if isinstance(layer, TiledTileLayer) and getattr(layer, "name", "").lower() == "door":
             for x, y, gid in layer:
                 if gid != 0:
-                    rect = pygame.Rect(
-                        int(x * tmx_data.tilewidth * scale),
-                        int(y * tmx_data.tileheight * scale),
-                        int(tmx_data.tilewidth * scale),
-                        int(tmx_data.tileheight * scale)
-                    )
+                    rect = pygame.Rect(int(x * tmx_data.tilewidth * scale),
+                                       int(y * tmx_data.tileheight * scale),
+                                       int(tmx_data.tilewidth * scale),
+                                       int(tmx_data.tileheight * scale))
                     door_rects.append(rect)
 
     # Player spawn
@@ -78,20 +78,21 @@ def run_level(level_file, background_file):
     for obj in tmx_data.objects:
         if obj.name and obj.name.lower() == "player":
             spawn_x, spawn_y = int(obj.x * scale), int(obj.y * scale)
-
     player = Player(spawn_x, spawn_y)
     all_sprites = pygame.sprite.Group(player)
 
-    # Stones (example)
+    # Stones
     stones = pygame.sprite.Group()
     stone_positions = [(200, 200), (400, 300), (600, 150)]
     for pos in stone_positions:
         stones.add(Stone(pos[0], pos[1]))
 
+    # Moving Platforms (create ONCE here)
     moving_platforms = pygame.sprite.Group()
-    if "lvl2.tmx" in level_file:   # only show in level 2
-        platform = MovingPlatform(300, 400, 100, 20, dx=2, dy=0, move_range=200)
-        moving_platforms.add(platform)
+    if "L9" in level_file:
+        mp1 = MovingPlatform(400, 600, 120, 20, range_x=650, speed=3)  # horizontal
+        mp2 = MovingPlatform(600, 450, 120, 20, range_x=200, speed=2)  # vertical
+        moving_platforms.add(mp1, mp2)
 
     def draw_map(surface):
         for layer in tmx_data.visible_layers:
@@ -104,8 +105,7 @@ def run_level(level_file, background_file):
                             tile,
                             (int(tmx_data.tilewidth * scale), int(tmx_data.tileheight * scale))
                         )
-                        surface.blit(tile, (int(x * tmx_data.tilewidth * scale),
-                                            int(y * tmx_data.tileheight * scale)))
+                        surface.blit(tile, (int(x * tmx_data.tilewidth * scale), int(y * tmx_data.tileheight * scale)))
 
     # ------------------ Game Loop ------------------
     death_count = 0
@@ -116,19 +116,33 @@ def run_level(level_file, background_file):
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
-                running = False
-        
+                pygame.quit()
+                raise SystemExit
+                return death_count, (pygame.time.get_ticks() - start_ticks) / 1000
+
         keys = pygame.key.get_pressed()
         all_sprites.update(keys, platforms)
+        moving_platforms.update()
+
         elapsed_time = (pygame.time.get_ticks() - start_ticks) / 1000
 
         # Death checks
-        if player.rect.top > screen_height:
+        if player.rect.top > screen.get_height():
             death_count += 1
             player.rect.topleft = (spawn_x, spawn_y)
+
         if pygame.sprite.spritecollide(player, stones, False):
             death_count += 1
             player.rect.topleft = (spawn_x, spawn_y)
+
+        # Platform collisions
+        for platform in moving_platforms:
+            if player.rect.colliderect(platform.rect) and player.vel_y >= 0:
+                player.rect.bottom = platform.rect.top
+                player.vel_y = 0
+                # Carry player
+                player.rect.x += platform.speed * platform.direction_x
+                player.rect.y += platform.speed * platform.direction_y
 
         # Door collision
         for rect in door_rects:
@@ -140,50 +154,78 @@ def run_level(level_file, background_file):
         screen.fill((0, 0, 0))
         screen.blit(background, (0, 0))
         draw_map(screen)
+        moving_platforms.draw(screen)
         all_sprites.draw(screen)
 
         death_text = font.render(f"Deaths: {death_count}", True, (255, 0, 0))
-        screen.blit(death_text, (20, 20))
         timer_text = font.render(f"Time: {int(elapsed_time)}s", True, (255, 255, 0))
+        screen.blit(death_text, (20, 20))
         screen.blit(timer_text, (20, 60))
-
         pygame.display.flip()
         clock.tick(60)
 
-    for rect in door_rects:
-        if player.rect.colliderect(rect): # Save stats
-            with open("level_times.txt", "a") as f:
-                f.write(f"{level_file}: Time: {elapsed_time:.2f}, Deaths: {death_count}\n")
-                f.flush()
-                os.fsync(f.fileno())
+    # Save stats
+    with open("level_times.txt", "a") as f:
+        f.write(f"{level_file}: Time: {elapsed_time:.2f}, Deaths: {death_count}\n")
+        f.flush()
+        os.fsync(f.fileno())
 
-    pygame.quit()
     return death_count, elapsed_time
 
-# ---------------------- Main Skill Assessment ----------------------
+
+# ---------------------- Skill Assessment ----------------------
 def assess_player():
     print("Starting Level-1 Trial")
     death1, time1 = run_level("lvl1.tmx", "bg1.jpg")
-
     print("Starting Level-2 Trial")
     death2, time2 = run_level("lvl2.tmx", "bg1.jpg")
 
-    
-   
+    with open("skill_model.pkl", "rb") as f:
+        model = pickle.load(f)
 
-    # Prepare feature vector
-    player_features = np.array([[death1, time1, death2, time2]])
-    assigned_level = model.predict(player_features)[0]
+    player_stats = np.array([[death1, time1, death2, time2]])
+    category = model.predict(player_stats)[0]
 
-    print(f"ML Decision: Player should start at Level {assigned_level}")
+    print(f"Initial category (decision tree) -> {category}")
 
-    # Redirect to chosen level without changing internal logic
-    if assigned_level == 1:
-        run_level("lvl1.tmx", "bg1.jpg")
-    elif assigned_level == 2:
-        # Call original lvl2 main function (logic unchanged)
-        run_level("lvl2.tmx", "bg1.jpg")
-    
+    categories = {
+        "Easy": [1, 2, 3, 4],
+        "Medium": [5, 6],
+        "Hard": [7, 8, 9,10,11,12]
+    }
+
+    levels = categories[category]
+    current_level_index = 0
+    predicted_level = levels[current_level_index]
+
+    level_files = {i: (f"L{i}.tmx", "bg1.jpg") for i in range(1, 10)}
+
+    while predicted_level <= 9:
+        print(f"Now playing Level {predicted_level} ({category})")
+        death, time = run_level(*level_files[predicted_level])
+
+        if category == "Hard":
+            current_level_index += 1
+        else:
+            if death <= 1 and time < 20:
+                if current_level_index + 1 < len(levels):
+                    current_level_index += 1
+                else:
+                    if category == "Easy":
+                        category = "Medium"
+                        levels = categories["Medium"]
+                    elif category == "Medium":
+                        category = "Hard"
+                        levels = categories["Hard"]
+                    current_level_index = 0
+            else:
+                current_level_index = 0
+
+        if current_level_index >= len(levels):
+            break
+
+        predicted_level = levels[current_level_index]
+
 
 # ---------------------- Entry Point ----------------------
 if __name__ == "__main__":
