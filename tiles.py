@@ -6,6 +6,8 @@ import numpy as np
 from sklearn.tree import DecisionTreeClassifier
 import pickle
 from movingplatform import MovingPlatform
+from PIL import Image
+import pygame
 
 
 # ---------------------- ML Setup ----------------------
@@ -26,6 +28,7 @@ model.fit(X_train, y_train)
 
 with open("skill_model.pkl", "wb") as f:
     pickle.dump(model, f)
+
 
 
 # ---------------------- Level Loader ----------------------
@@ -74,7 +77,7 @@ def run_level(level_file, background_file):
                     door_rects.append(rect)
 
     # Player spawn
-    spawn_x, spawn_y = 100, 100
+    spawn_x, spawn_y = 50, 600
     for obj in tmx_data.objects:
         if obj.name and obj.name.lower() == "player":
             spawn_x, spawn_y = int(obj.x * scale), int(obj.y * scale)
@@ -91,8 +94,10 @@ def run_level(level_file, background_file):
     moving_platforms = pygame.sprite.Group()
     if "L9" in level_file:
         mp1 = MovingPlatform(400, 600, 120, 20, range_x=650, speed=3)  # horizontal
-        mp2 = MovingPlatform(600, 450, 120, 20, range_x=200, speed=2)  # vertical
-        moving_platforms.add(mp1, mp2)
+        
+        moving_platforms.add(mp1)
+
+    
 
     def draw_map(surface):
         for layer in tmx_data.visible_layers:
@@ -131,10 +136,7 @@ def run_level(level_file, background_file):
             death_count += 1
             player.rect.topleft = (spawn_x, spawn_y)
 
-        if pygame.sprite.spritecollide(player, stones, False):
-            death_count += 1
-            player.rect.topleft = (spawn_x, spawn_y)
-
+       
         # Platform collisions
         for platform in moving_platforms:
             if player.rect.colliderect(platform.rect) and player.vel_y >= 0:
@@ -191,7 +193,7 @@ def assess_player():
     categories = {
         "Easy": [1, 2, 3, 4],
         "Medium": [5, 6],
-        "Hard": [7, 8, 9,10,11,12]
+        "Hard": [7, 8, 9, 10, 11, 12]
     }
 
     levels = categories[category]
@@ -225,8 +227,39 @@ def assess_player():
             break
 
         predicted_level = levels[current_level_index]
+#---- win screen
+def victory_screen():
+    pygame.init()
+    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+    clock = pygame.time.Clock()
+
+    font_big = pygame.font.Font("MedodicaRegular.otf", 120)
+    font_small = pygame.font.Font("MedodicaRegular.otf", 50)
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+                pygame.quit()
+                raise SystemExit
+
+        screen.fill((0, 0, 0))
+
+        title = font_big.render("Victory!", True, (255, 215, 0))
+        msg = font_small.render("Press ESC to exit", True, (255, 255, 255))
+       
+
+        screen.blit(title, (screen.get_width()//2 - title.get_width()//2, screen.get_height()//3))
+        screen.blit(msg, (screen.get_width()//2 - msg.get_width()//2, screen.get_height()//2))
+        
+
+        pygame.display.flip()
+        clock.tick(60)
 
 
 # ---------------------- Entry Point ----------------------
 if __name__ == "__main__":
     assess_player()
+    print("All levels completed! Showing victory screen...")
+    victory_screen()
+
