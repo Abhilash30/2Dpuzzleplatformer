@@ -10,8 +10,6 @@ def show_settings():
     bg = pygame.image.load("Comingsoon.png").convert()
     screen_width, screen_height = screen.get_size()
     bg = pygame.transform.scale(bg, (screen_width, screen_height))
-
-    font_title = pygame.font.Font("MedodicaRegular.otf", 120)
     font_small = pygame.font.Font("MedodicaRegular.otf", 50)
 
 
@@ -39,6 +37,6 @@ def show_settings():
         back_text = font_small.render("Back", True, (255, 255, 255))
         screen.blit(back_text, (back_btn.x + back_btn.width // 2 - back_text.get_width() // 2,
                                 back_btn.y + back_btn.height // 2 - back_text.get_height() // 2))
-        
+
         pygame.display.flip()
         clock.tick(60)

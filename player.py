@@ -125,7 +125,7 @@ class Player(pygame.sprite.Sprite):
         #         particles.append(Particle(self.rect.centerx, self.rect.bottom))
 
         if (keys[pygame.K_SPACE] or keys[pygame.K_w] or keys[pygame.K_UP]) and self.on_ground:
-            self.vel_y = -21
+            self.vel_y = -19
             self.on_ground = False
             self.jump_sound.play()
 

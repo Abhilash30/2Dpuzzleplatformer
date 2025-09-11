@@ -4,7 +4,7 @@ class MovingPlatform(pygame.sprite.Sprite):
     def __init__(self, x, y, w, h, range_x=0, range_y=0, speed=2):
         super().__init__()
         self.image = pygame.Surface((w, h))
-        self.image.fill((150, 75, 0))  # brown platform
+        self.image.fill((225, 225, 0))  # yellow platform
         self.rect = self.image.get_rect(topleft=(x, y))
 
         # Movement settings

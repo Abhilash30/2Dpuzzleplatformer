@@ -271,11 +271,11 @@ def assess_player():
     print(f"ML Decision: Player should play category {predicted_category}, starting at Level {next_level}")
 
     # Level files
-    level_files = {i: (f"L{i}.tmx", f"bg1.jpg") for i in range(1, 13)}
+    level_files = {i: (f"L{i}.tmx", f"bg1.jpg") for i in range(1, 14)}
     current_level = next_level
 
     # Loop until end
-    while current_level <= 12:
+    while current_level <= 13:
         _, _, clf = run_level(level_files[current_level][0], level_files[current_level][1], current_level, clf)
         current_level += 1
         # Re-check ML prediction after each level
