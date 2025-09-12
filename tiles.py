@@ -302,9 +302,6 @@ def assess_player():
     victory_screen()
 
 
-# ---------------------- Entry Point ----------------------
-if __name__ == "__main__":
-    assess_player()
 
 
 
