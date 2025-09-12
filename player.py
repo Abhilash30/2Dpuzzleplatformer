@@ -86,7 +86,7 @@ class Player(pygame.sprite.Sprite):
             self.rect.x -= 5
             self.facing_right = False
             moving = True
-        if keys[pygame.K_RIGHT]:
+        if keys[pygame.K_RIGHT or pygame.K_f]:
             self.rect.x += 5
             self.facing_right = True
             moving = True
@@ -109,6 +109,8 @@ class Player(pygame.sprite.Sprite):
         self.vel_y += 1
         self.rect.y += self.vel_y
 
+        
+        self.was_on_ground = self.on_ground
         self.on_ground = False
         for platform in platforms:
             if self.rect.colliderect(platform):
@@ -118,8 +120,6 @@ class Player(pygame.sprite.Sprite):
                     self.on_ground = True
         # --- Landing check goes here ---
         landed = not self.was_on_ground and self.on_ground
-        self.was_on_ground = self.on_ground
-
         # if landed:
         #     for i in range(10):  # number of mud particles
         #         particles.append(Particle(self.rect.centerx, self.rect.bottom))

@@ -1,7 +1,6 @@
 # credits.py
 import pygame
 import sys
-from wall import Wall
 
 def show_credits():
     pygame.init()
@@ -15,7 +14,7 @@ def show_credits():
 
     font_title = pygame.font.Font("MedodicaRegular.otf", 120)
     font_small = pygame.font.Font("MedodicaRegular.otf", 50)
-    walls = pygame.sprite.Group()
+
 
     # Back button
     back_btn = pygame.Rect(screen_width - 220, screen_height - 100, 200, 60)

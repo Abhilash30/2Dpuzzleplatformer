@@ -16,9 +16,9 @@ LOG_FILE = "level_times.txt"
 def base_training():
     """Bootstrap model with some initial training data."""
     X_train = [
-        [0, 40, 0, 35],   # very skilled
-        [2, 70, 2, 65],   # average
-        [6, 120, 6, 115]  # poor
+        [0, 10, 0, 20],   # very skilled
+        [2, 30, 2, 40],   # average
+        [4, 40, 6, 50]  # poor
     ]
     y_train = ["Hard", "Medium", "Easy"]
 
@@ -101,7 +101,7 @@ def run_level(level_file, background_file, level_num, clf):
     background = pygame.transform.scale(background, (screen_width, screen_height))
     bg_width = background.get_width()
 
-    font = pygame.font.Font("MedodicaRegular.otf", 120)
+    font = pygame.font.Font("MedodicaRegular.otf", 50)
     level_name_text = font.render(f"Level {level_num}", True, (0, 255, 255))
 
     # Platforms
@@ -138,18 +138,16 @@ def run_level(level_file, background_file, level_num, clf):
     player = Player(spawn_x, spawn_y)
     all_sprites = pygame.sprite.Group(player)
 
-    # Stones
-    stones = pygame.sprite.Group()
-    stone_positions = [(200, 200), (400, 300), (600, 150)]
-    for pos in stone_positions:
-        stones.add(Stone(pos[0], pos[1]))
-
     # Moving Platforms (create ONCE here)
     moving_platforms = pygame.sprite.Group()
     if "L9" in level_file:
         mp1 = MovingPlatform(400, 600, 120, 20, range_x=650, speed=3)  # horizontal
         
         moving_platforms.add(mp1)
+    if "L13" in level_file:
+        mp2 = MovingPlatform(900, 800, 120, 20, range_x=600, speed=3)
+        mp3 = MovingPlatform(850, 50, 120, 20, range_y=750, speed=5)
+        moving_platforms.add(mp2,mp3)
 
     
 
@@ -171,7 +169,8 @@ def run_level(level_file, background_file, level_num, clf):
     font = pygame.font.Font("MedodicaRegular.otf", 50)
     running = True
     start_ticks = pygame.time.get_ticks()
-    
+    hint_delay = 20000  # 25 seconds in milliseconds
+    hint_shown = False  
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
@@ -183,7 +182,12 @@ def run_level(level_file, background_file, level_num, clf):
         all_sprites.update(keys, platforms)
         moving_platforms.update()
 
-    
+        elapsed = pygame.time.get_ticks() - start_ticks
+        if elapsed >= hint_delay and not hint_shown:
+            hint_font = pygame.font.Font("MedodicaRegular.otf", 50)
+            hint_text = font.render("Hint: Try jumping off the moving platform when its high up and press ->", True, (255, 0, 0))
+            screen.blit(hint_text, (20, 720 - hint_text.get_height() - 20))  
+            hint_shown = True  # only show once
 
         elapsed_time = (pygame.time.get_ticks() - start_ticks) / 1000
 
@@ -192,16 +196,23 @@ def run_level(level_file, background_file, level_num, clf):
             death_count += 1
             player.rect.topleft = (spawn_x, spawn_y)
 
-       
-        # Platform collisions
+        
+        on_platform = False  
+
         for platform in moving_platforms:
             if player.rect.colliderect(platform.rect) and player.vel_y >= 0:
+                # Land on platform
                 player.rect.bottom = platform.rect.top
                 player.vel_y = 0
-                # Carry player
+                player.on_ground = True
+                on_platform = True
                 player.rect.x += platform.speed * platform.direction_x
                 player.rect.y += platform.speed * platform.direction_y
 
+        if not on_platform:
+            player.on_ground = False
+
+        
         # Door collision
         for rect in door_rects:
             if player.rect.colliderect(rect):
@@ -250,7 +261,7 @@ def run_level(level_file, background_file, level_num, clf):
 # ---------------------- Skill Assessment ----------------------
 def assess_player():
     clf = load_or_train_model()
-
+    run_level("L13.tmx", "bg1.jpg", 13, clf)
     print("Starting Level-1 Trial")
     death1, time1, clf = run_level("lvl1.tmx", "bg1.jpg", 1, clf)
     print("Starting Level-2 Trial")
