@@ -261,7 +261,7 @@ def run_level(level_file, background_file, level_num, clf):
 # ---------------------- Skill Assessment ----------------------
 def assess_player():
     clf = load_or_train_model()
-    run_level("L13.tmx", "bg1.jpg", 13, clf)
+
     print("Starting Level-1 Trial")
     death1, time1, clf = run_level("lvl1.tmx", "bg1.jpg", 1, clf)
     print("Starting Level-2 Trial")
@@ -282,25 +282,30 @@ def assess_player():
     print(f"ML Decision: Player should play category {predicted_category}, starting at Level {next_level}")
 
     # Level files
-    level_files = {i: (f"L{i}.tmx", f"bg1.jpg") for i in range(1, 14)}
+    level_files = {i: (f"L{i}.tmx", f"bg1.jpg") for i in range(1, 13)}
     current_level = next_level
 
     # Loop until end
-    while current_level <= 13:
-        _, _, clf = run_level(level_files[current_level][0], level_files[current_level][1], current_level, clf)
+    while current_level <= 12:
+        _, _, clf = run_level(level_files[current_level][0],
+                              level_files[current_level][1],
+                              current_level,
+                              clf)
         current_level += 1
         # Re-check ML prediction after each level
         new_clf = retrain_model()
         if new_clf:
             clf = new_clf
-        pred = clf.predict([[0,0,0,0]])[0]  # placeholder, normally use last stats
 
-        #if pred == "Hard":
-            #current_level = min(12, current_level + 1)
-        #elif pred == "Medium":
-            #current_level = min(12, current_level + 2)
-        #else:  # Easy
-            #current_level = min(12, current_level + 2)
+    #  After loop ends, show victory screen
+    print("All levels completed! Showing victory screen...")
+    victory_screen()
+
+
+# ---------------------- Entry Point ----------------------
+if __name__ == "__main__":
+    assess_player()
+
 
 
 #---- win screen
@@ -336,6 +341,5 @@ def victory_screen():
 # ---------------------- Entry Point ----------------------
 if __name__ == "__main__":
     assess_player()
-    print("All levels completed! Showing victory screen...")
-    victory_screen()
+
 
